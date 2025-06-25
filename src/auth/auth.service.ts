@@ -66,7 +66,7 @@ export class AuthService {
   async verifyOtp({ email, otp }: VerifyOtpParams) {
     const user = await this.usersService.findByEmail(email);
     if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
-    console.log(user)
+
     if (
       user.resetToken !== otp ||
       !user.resetTokenExpiry
@@ -92,7 +92,7 @@ export class AuthService {
     });
 
 
-    const loginResponse = await this.login(updatedUser,)
+    const loginResponse = await this.login(updatedUser)
 
     return { data: loginResponse, message: 'OTP verified successfully, user activated' };
   }
@@ -122,6 +122,22 @@ export class AuthService {
     });
 
     return { message: 'Password changed successfully', data: {} };
+  }
+
+  async resetPassword(userId: number, password: string) {
+
+    const user = await this.usersService.findById(userId);
+    if (!user) {
+      throw new HttpException('User not found', HttpStatus.BAD_REQUEST);
+    }
+
+    const hashed = await bcrypt.hash(password, 10);
+
+    await this.usersService.updateUser(userId, {
+      password: hashed,
+    });
+
+    return { message: 'Password reset successfully', data: {} };
   }
 
 }

@@ -51,5 +51,10 @@ export class AuthController {
     return this.authService.changePassword(userId, body);
   }
 
-
+  @UseGuards(AuthGuard)
+  @Post('reset-password')
+  async resetPassword(@Request() req, @Body("password") password: string) {
+    const userId: number = req.user.id;
+    return this.authService.resetPassword(userId, password);
+  }
 }
