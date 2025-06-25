@@ -8,7 +8,7 @@ import { generateOTP } from 'src/utils/generateOtp';
 @Injectable()
 export class UsersService {
   constructor(private prisma: PrismaService) { }
-  
+
   async createUser(body: CreateUserParams) {
     const { email, password, country, fcmToken, firstName, lastName } = body
     const hashed = await bcrypt.hash(password, 10);
@@ -43,11 +43,10 @@ export class UsersService {
   }
 
   async updateUser(userId: number, data: Partial<User>) {
-  return this.prisma.user.update({
-    where: { id: userId },
-    data,
-  });
-}
-
+    return this.prisma.user.update({
+      where: { id: userId },
+      data,
+    });
+  }
 
 }

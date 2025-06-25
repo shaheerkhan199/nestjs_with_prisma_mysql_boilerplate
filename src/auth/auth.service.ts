@@ -2,9 +2,8 @@ import { BadRequestException, HttpException, HttpStatus, Injectable, Unauthorize
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { CreateUserParams, VerifyOtpParams } from 'src/utils/types';
+import { ChangePasswordParams, CreateUserParams, VerifyOtpParams } from 'src/utils/types';
 import { generateOTP } from 'src/utils/generateOtp';
-// import moment from 'moment';
 import * as moment from "moment";
 
 @Injectable()
@@ -25,7 +24,7 @@ export class AuthService {
   }
 
   async login(user: any) {
-    const payload = { sub: user.id, email: user.email };
+    const payload = { id: user.id, email: user.email };
     return {
       user,
       access_token: this.jwtService.sign(payload),
@@ -96,6 +95,33 @@ export class AuthService {
     const loginResponse = await this.login(updatedUser,)
 
     return { data: loginResponse, message: 'OTP verified successfully, user activated' };
+  }
+
+  async logout(userId: number) {
+    await this.usersService.updateUser(userId, { fcmToken: null })
+    return { message: 'User Logout successfully', data: {} };
+  }
+
+  async changePassword(userId: number, body: ChangePasswordParams) {
+    const { currentPassword, newPassword } = body;
+
+    const user = await this.usersService.findById(userId);
+    if (!user) {
+      throw new HttpException('User not found', HttpStatus.BAD_REQUEST);
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      throw new BadRequestException('Current password is incorrect');
+    }
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+
+    await this.usersService.updateUser(userId, {
+      password: hashed,
+    });
+
+    return { message: 'Password changed successfully', data: {} };
   }
 
 }
